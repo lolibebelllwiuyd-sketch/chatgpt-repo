@@ -1,0 +1,55 @@
+name: Build ZeinBoneMealConverter
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "ZeinBoneMealConverter-source.tar.gz.b64"
+      - ".github/workflows/build-bonemeal.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Restore addon source
+        run: |
+          base64 -d ZeinBoneMealConverter-source.tar.gz.b64 | gzip -dc > /tmp/zein-source.zip
+          unzip -q /tmp/zein-source.zip -d .
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.2.1"
+
+      - name: Download SmartSpawner API JAR
+        run: |
+          mkdir -p ZeinBoneMealConverter/libs
+          curl --fail --location --retry 3 \
+            "https://raw.githubusercontent.com/lolibebelllwiuyd-sketch/wdwadwadwad/main/SmartSpawner-1.9.0.jar" \
+            --output ZeinBoneMealConverter/libs/SmartSpawner-1.9.0.jar
+
+      - name: Build addon
+        working-directory: ZeinBoneMealConverter
+        run: gradle --no-daemon clean build
+
+      - name: Upload plugin JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZeinBoneMealConverter
+          path: ZeinBoneMealConverter/build/libs/ZeinBoneMealConverter-1.0.0.jar
+          if-no-files-found: error
+          retention-days: 30

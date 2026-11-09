@@ -1,0 +1,42 @@
+
+name: Build ZeinBoneMealConverter
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "ZeinBoneMealConverter/**"
+      - ".github/workflows/build.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Download SmartSpawner
+        run: |
+          mkdir -p ZeinBoneMealConverter/libs
+          curl -fL "https://raw.githubusercontent.com/lolibebelllwiuyd-sketch/wdwadwadwad/main/SmartSpawner-1.9.0.jar" \
+            -o ZeinBoneMealConverter/libs/SmartSpawner-1.9.0.jar
+
+      - name: Build plugin
+        working-directory: ZeinBoneMealConverter
+        run: gradle clean build
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZeinBoneMealConverter
+          path: ZeinBoneMealConverter/build/libs/ZeinBoneMealConverter-1.0.0.jar
